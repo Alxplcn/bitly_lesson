@@ -20,6 +20,11 @@ $ cd D:\bitlink_lesson
 $ pip install -r requirements.txt
 $ python main.py
 ```
+Требуется, чтобы в папке D:\bitlink_lesson был файл .env с токеном сервиса bit.ly в следующем формате:
+
+TOKEN=='yourtokenhere'
+
+
 В случае успеха пользователю будет предложено ввести ссылку для сокращения/проверки количества переходов
 
 ## Контакты
