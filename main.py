@@ -1,21 +1,11 @@
 import os
 import requests
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 
-load_dotenv()
-TOKEN = os.environ['TOKEN']
-
-
-def get_user(token: str) -> str:
-    url = 'https://api-ssl.bitly.com/v4/user'
-    headers = {
-        'Authorization': f'Bearer {token}'
-    }
-
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.text
+def get_token():
+    return os.environ['BITLY_TOKEN']
 
 
 def shorten_link(token: str, link: str) -> str:
@@ -33,8 +23,8 @@ def shorten_link(token: str, link: str) -> str:
 
 
 def count_clicks(token: str, link: str) -> str:
-
-    link = link.replace('https://', '').replace('http://', '')
+    parsed_link = urlparse(link)
+    link = parsed_link.netloc + parsed_link.path
     url = f'https://api-ssl.bitly.com/v4/bitlinks/{link}/clicks/summary'
     headers = {
         'Authorization': f'Bearer {token}'
@@ -47,29 +37,28 @@ def count_clicks(token: str, link: str) -> str:
 
 
 def is_bitlink(token: str, url: str) -> bool:
-    url = url.replace('https://', '').replace('http://', '')
+    parsed_url = urlparse(url)
+    url = parsed_url.netloc + parsed_url.path
     headers = {
         'Authorization': f'Bearer {token}'
     }
     link = f'https://api-ssl.bitly.com/v4/bitlinks/{url}'
     response = requests.get(link, headers=headers)
-    try:
-        response.raise_for_status()
-    except requests.exceptions.HTTPError:
-        return False
-    return True
+    return response.ok
 
 
 def main() -> None:
+    load_dotenv()
+    token = get_token()
     user_input = input('Введите ссылку: ')
-    if is_bitlink(TOKEN, user_input):
-        print("Вы ввели битлинк. Количество переходов по нему: ", count_clicks(TOKEN, user_input))
-    else:
-        try:
-            print("Битлинк по вашей ссылке: ", shorten_link(TOKEN, user_input))
-        except requests.exceptions.HTTPError:
-            print("Введённая строка не является ни битлинком, ни длинной ссылкой. "
-                  "Попробуйте ещё раз, перезапустив программу")
+    try:
+        if is_bitlink(token, user_input):
+            print("Вы ввели битлинк. Количество переходов по нему: ", count_clicks(token, user_input))
+        else:
+            print("Битлинк по вашей ссылке: ", shorten_link(token, user_input))
+    except requests.exceptions.HTTPError:
+        print("Введённая строка не является ни битлинком, ни длинной ссылкой. "
+              "Попробуйте ещё раз, перезапустив программу")
 
 
 if __name__ == '__main__':
